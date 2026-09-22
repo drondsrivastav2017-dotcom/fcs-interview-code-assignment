@@ -21,6 +21,8 @@ out/
 
 # Testing
 coverage/
+# ... except the coverage snapshot that is kept on purpose, to track the numbers over time
+!docs/coverage/
 
 # IDE specific files
 .idea/
