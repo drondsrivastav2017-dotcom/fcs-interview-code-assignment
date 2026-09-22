@@ -14,4 +14,10 @@ public interface WarehouseStore {
   void remove(Warehouse warehouse);
 
   Warehouse findByBusinessUnitCode(String buCode);
+
+  /**
+   * Returns the active warehouse with the given technical id, or {@code null} when there is none.
+   * Archived units are kept as history and are not part of the operational view.
+   */
+  Warehouse findActiveById(Long id);
 }

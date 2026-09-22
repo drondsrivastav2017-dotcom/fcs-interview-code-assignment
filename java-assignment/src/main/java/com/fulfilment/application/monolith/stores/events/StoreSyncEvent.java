@@ -1,4 +1,6 @@
-package com.fulfilment.application.monolith.stores;
+package com.fulfilment.application.monolith.stores.events;
+
+import com.fulfilment.application.monolith.stores.Store;
 
 /**
  * Carries a store change towards the legacy system. The store is a detached copy: the event is

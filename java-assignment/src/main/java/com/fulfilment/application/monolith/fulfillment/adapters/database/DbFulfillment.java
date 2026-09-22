@@ -1,5 +1,8 @@
-package com.fulfilment.application.monolith.fulfillment;
+package com.fulfilment.application.monolith.fulfillment.adapters.database;
 
+import com.fulfilment.application.monolith.fulfillment.domain.models.Fulfillment;
+import com.fulfilment.application.monolith.fulfillment.domain.models.ProductReference;
+import com.fulfilment.application.monolith.fulfillment.domain.models.StoreReference;
 import com.fulfilment.application.monolith.products.Product;
 import com.fulfilment.application.monolith.stores.Store;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
@@ -11,11 +14,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 /**
- * Association stating that a warehouse acts as a fulfilment unit of a product for a store.
- *
- * <p>The warehouse is referenced by its business unit code rather than by row id: a replacement
- * archives the row but keeps the business unit code, and the new unit is expected to take over the
- * fulfilment duties of the one it replaces.
+ * Persistence view of a fulfilment association. The store and the product are mapped as real
+ * relations so the database keeps the referential integrity, while the warehouse is kept as its
+ * business unit code: that code survives a replacement, the warehouse row does not.
  */
 @Entity
 @Table(
@@ -24,7 +25,7 @@ import jakarta.persistence.UniqueConstraint;
         @UniqueConstraint(
             name = "uk_fulfillment_store_product_warehouse",
             columnNames = {"store_id", "product_id", "warehouseBusinessUnitCode"}))
-public class Fulfillment extends PanacheEntity {
+public class DbFulfillment extends PanacheEntity {
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "store_id", nullable = false)
@@ -37,11 +38,21 @@ public class Fulfillment extends PanacheEntity {
   @Column(nullable = false, length = 40)
   public String warehouseBusinessUnitCode;
 
-  public Fulfillment() {}
+  public DbFulfillment() {}
 
-  public Fulfillment(Store store, Product product, String warehouseBusinessUnitCode) {
+  public DbFulfillment(Store store, Product product, String warehouseBusinessUnitCode) {
     this.store = store;
     this.product = product;
     this.warehouseBusinessUnitCode = warehouseBusinessUnitCode;
+  }
+
+  public Fulfillment toFulfillment() {
+    var fulfillment =
+        new Fulfillment(
+            new StoreReference(store.id, store.name),
+            new ProductReference(product.id, product.name),
+            warehouseBusinessUnitCode);
+    fulfillment.id = this.id;
+    return fulfillment;
   }
 }

@@ -15,6 +15,8 @@ import com.fulfilment.application.monolith.warehouses.domain.models.Warehouse;
 import com.fulfilment.application.monolith.warehouses.domain.ports.ArchiveWarehouseOperation;
 import com.fulfilment.application.monolith.warehouses.domain.ports.CreateWarehouseOperation;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
+import com.fulfilment.application.monolith.warehouses.domain.validation.WarehousePayloadValidator;
+import com.fulfilment.application.monolith.warehouses.domain.validation.WarehouseReplacementValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +34,9 @@ public class ReplaceWarehouseUseCaseTest {
     createWarehouseOperation = mock(CreateWarehouseOperation.class);
     replaceWarehouseUseCase =
         new ReplaceWarehouseUseCase(
-            warehouseStore, archiveWarehouseOperation, createWarehouseOperation);
+            new WarehouseReplacementValidator(new WarehousePayloadValidator(), warehouseStore),
+            archiveWarehouseOperation,
+            createWarehouseOperation);
   }
 
   @Test

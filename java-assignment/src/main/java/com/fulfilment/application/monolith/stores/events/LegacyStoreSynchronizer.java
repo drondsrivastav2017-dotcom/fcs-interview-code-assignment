@@ -1,5 +1,6 @@
-package com.fulfilment.application.monolith.stores;
+package com.fulfilment.application.monolith.stores.events;
 
+import com.fulfilment.application.monolith.stores.LegacyStoreManagerGateway;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.TransactionPhase;

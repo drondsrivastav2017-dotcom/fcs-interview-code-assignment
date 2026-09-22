@@ -15,6 +15,8 @@ import com.fulfilment.application.monolith.warehouses.domain.models.Location;
 import com.fulfilment.application.monolith.warehouses.domain.models.Warehouse;
 import com.fulfilment.application.monolith.warehouses.domain.ports.LocationResolver;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
+import com.fulfilment.application.monolith.warehouses.domain.validation.WarehouseCreationValidator;
+import com.fulfilment.application.monolith.warehouses.domain.validation.WarehousePayloadValidator;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,11 @@ public class CreateWarehouseUseCaseTest {
   void setUp() {
     warehouseStore = mock(WarehouseStore.class);
     locationResolver = mock(LocationResolver.class);
-    createWarehouseUseCase = new CreateWarehouseUseCase(warehouseStore, locationResolver);
+    createWarehouseUseCase =
+        new CreateWarehouseUseCase(
+            warehouseStore,
+            new WarehouseCreationValidator(
+                new WarehousePayloadValidator(), warehouseStore, locationResolver));
 
     when(locationResolver.resolveByIdentifier("AMSTERDAM-001")).thenReturn(AMSTERDAM);
     when(warehouseStore.getAll()).thenReturn(List.of());

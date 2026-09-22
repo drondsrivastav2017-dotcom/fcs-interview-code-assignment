@@ -1,14 +1,17 @@
-package com.fulfilment.application.monolith.warehouses.domain.usecases;
+package com.fulfilment.application.monolith.warehouses.domain.validation;
 
 import com.fulfilment.application.monolith.exceptions.ValidationException;
 import com.fulfilment.application.monolith.warehouses.domain.models.Warehouse;
+import jakarta.enterprise.context.ApplicationScoped;
 
-/** Payload rules shared by the warehouse creation and replacement use cases. */
-final class WarehouseValidations {
+/**
+ * Validates the warehouse payload on its own, without looking at the rest of the system: the fields
+ * that are mandatory and the rules that only involve the submitted values.
+ */
+@ApplicationScoped
+public class WarehousePayloadValidator {
 
-  private WarehouseValidations() {}
-
-  static void validatePayload(Warehouse warehouse) {
+  public void validate(Warehouse warehouse) {
     if (warehouse == null) {
       throw new ValidationException("Warehouse data is required.");
     }

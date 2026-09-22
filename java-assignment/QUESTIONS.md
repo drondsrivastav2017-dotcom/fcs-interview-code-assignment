@@ -8,13 +8,19 @@ Here we have 3 questions related to the code base for you to answer. It is not a
 ```txt
 There are three strategies living side by side today:
 
-  - Store     -> active record: Store extends PanacheEntity and StoreResource calls
-                 Store.findById / persist / delete directly from the HTTP layer.
-  - Product   -> repository: ProductRepository implements PanacheRepository and is
-                 injected into ProductResource.
-  - Warehouse -> ports and adapters: a plain domain model (Warehouse), a port
-                 (WarehouseStore), a JPA entity (DbWarehouse) and an adapter
-                 (WarehouseRepository), with the rules living in use cases.
+  - Store       -> active record: Store extends PanacheEntity and StoreResource calls
+                   Store.findById / persist / delete directly from the HTTP layer.
+  - Product     -> repository: ProductRepository implements PanacheRepository and is
+                   injected into ProductResource.
+  - Warehouse   -> ports and adapters: a plain domain model (Warehouse), a port
+                   (WarehouseStore), a JPA entity (DbWarehouse) and an adapter
+                   (WarehouseRepository), with the rules living in use cases and in a
+                   dedicated validation package.
+
+The fulfilment feature I added follows the warehouse strategy for the same reasons, and
+its domain does not import the Store, Product or Warehouse classes at all: it declares
+what it needs as ports (StoreResolver, ProductResolver, WarehouseResolver) and the
+adapters connect them. That is what makes its rules testable against three mocks.
 
 Yes, I would converge them, and the direction I would take is the warehouse one - for
 concrete reasons rather than for purity:
@@ -41,11 +47,14 @@ I would do first, in order: (1) stop returning JPA entities from the resources a
 introduce request/response records, (2) move the validation out of the resources into
 a service, (3) extract a port once a second caller or a real invariant appears.
 
-One inconsistency I deliberately left in place and would address in a real refactor:
-WarehouseResourceImpl still injects the WarehouseRepository adapter for its two read
-operations, because WarehouseStore has no "find by technical id" method. I kept the
-given port untouched and confined the leak to reads, but the honest fix is to add that
-method to the port so the REST adapter depends only on the domain.
+One inconsistency I had left in place at first is worth mentioning, because it shows
+where the line is: WarehouseResourceImpl used to inject the WarehouseRepository adapter
+for its two read operations, since the given WarehouseStore port had no "find by
+technical id" method. Leaving it there meant the REST adapter depended on the database
+layer for reads only, which is exactly the kind of small leak that becomes the norm, so
+I added findActiveById to the port instead. The REST adapter now depends only on the
+domain, and the name says "active" because archived units are history and must not be
+returned by the API.
 ```
 ----
 2. When it comes to API spec and endpoints handlers, we have an Open API yaml file for the `Warehouse` API from which we generate code, but for the other endpoints - `Product` and `Store` - we just coded directly everything. What would be your thoughts about what are the pros and cons of each approach and what would be your choice?

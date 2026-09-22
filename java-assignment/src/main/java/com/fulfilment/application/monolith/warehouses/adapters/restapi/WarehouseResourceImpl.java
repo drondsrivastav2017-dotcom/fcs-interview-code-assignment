@@ -2,10 +2,10 @@ package com.fulfilment.application.monolith.warehouses.adapters.restapi;
 
 import com.fulfilment.application.monolith.exceptions.ResourceNotFoundException;
 import com.fulfilment.application.monolith.exceptions.ValidationException;
-import com.fulfilment.application.monolith.warehouses.adapters.database.WarehouseRepository;
 import com.fulfilment.application.monolith.warehouses.domain.ports.ArchiveWarehouseOperation;
 import com.fulfilment.application.monolith.warehouses.domain.ports.CreateWarehouseOperation;
 import com.fulfilment.application.monolith.warehouses.domain.ports.ReplaceWarehouseOperation;
+import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
 import com.warehouse.api.WarehouseResource;
 import com.warehouse.api.beans.Warehouse;
 import jakarta.enterprise.context.RequestScoped;
@@ -13,10 +13,14 @@ import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
+/**
+ * REST adapter of the warehouse API. It only translates between the generated API beans and the
+ * domain model: every rule lives behind the ports it depends on.
+ */
 @RequestScoped
 public class WarehouseResourceImpl implements WarehouseResource {
 
-  @Inject private WarehouseRepository warehouseRepository;
+  @Inject private WarehouseStore warehouseStore;
 
   @Inject private CreateWarehouseOperation createWarehouseOperation;
 
@@ -26,7 +30,7 @@ public class WarehouseResourceImpl implements WarehouseResource {
 
   @Override
   public List<Warehouse> listAllWarehousesUnits() {
-    return warehouseRepository.getAll().stream().map(this::toWarehouseResponse).toList();
+    return warehouseStore.getAll().stream().map(this::toWarehouseResponse).toList();
   }
 
   @Override
@@ -40,24 +44,12 @@ public class WarehouseResourceImpl implements WarehouseResource {
 
   @Override
   public Warehouse getAWarehouseUnitByID(String id) {
-    var warehouse = warehouseRepository.findActiveById(toIdentifier(id));
-
-    if (warehouse == null) {
-      throw new ResourceNotFoundException("Warehouse with id of " + id + " does not exist.");
-    }
-
-    return toWarehouseResponse(warehouse);
+    return toWarehouseResponse(requireActiveWarehouse(id));
   }
 
   @Override
   public void archiveAWarehouseUnitByID(String id) {
-    var warehouse = warehouseRepository.findActiveById(toIdentifier(id));
-
-    if (warehouse == null) {
-      throw new ResourceNotFoundException("Warehouse with id of " + id + " does not exist.");
-    }
-
-    archiveWarehouseOperation.archive(warehouse);
+    archiveWarehouseOperation.archive(requireActiveWarehouse(id));
   }
 
   @Override
@@ -69,6 +61,17 @@ public class WarehouseResourceImpl implements WarehouseResource {
     replaceWarehouseOperation.replace(newWarehouse);
 
     return toWarehouseResponse(newWarehouse);
+  }
+
+  private com.fulfilment.application.monolith.warehouses.domain.models.Warehouse
+      requireActiveWarehouse(String id) {
+    var warehouse = warehouseStore.findActiveById(toIdentifier(id));
+
+    if (warehouse == null) {
+      throw new ResourceNotFoundException("Warehouse with id of " + id + " does not exist.");
+    }
+
+    return warehouse;
   }
 
   private Long toIdentifier(String id) {

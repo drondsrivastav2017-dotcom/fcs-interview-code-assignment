@@ -1,10 +1,9 @@
 package com.fulfilment.application.monolith.warehouses.domain.usecases;
 
-import com.fulfilment.application.monolith.exceptions.ResourceNotFoundException;
-import com.fulfilment.application.monolith.exceptions.ValidationException;
 import com.fulfilment.application.monolith.warehouses.domain.models.Warehouse;
 import com.fulfilment.application.monolith.warehouses.domain.ports.ArchiveWarehouseOperation;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
+import com.fulfilment.application.monolith.warehouses.domain.validation.WarehouseArchiveValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -13,27 +12,18 @@ import java.time.LocalDateTime;
 public class ArchiveWarehouseUseCase implements ArchiveWarehouseOperation {
 
   private final WarehouseStore warehouseStore;
+  private final WarehouseArchiveValidator archiveValidator;
 
-  public ArchiveWarehouseUseCase(WarehouseStore warehouseStore) {
+  public ArchiveWarehouseUseCase(
+      WarehouseStore warehouseStore, WarehouseArchiveValidator archiveValidator) {
     this.warehouseStore = warehouseStore;
+    this.archiveValidator = archiveValidator;
   }
 
   @Override
   @Transactional
   public void archive(Warehouse warehouse) {
-    if (warehouse == null
-        || warehouse.businessUnitCode == null
-        || warehouse.businessUnitCode.isBlank()) {
-      throw new ValidationException("Business unit code is required to archive a warehouse.");
-    }
-
-    Warehouse existingWarehouse =
-        warehouseStore.findByBusinessUnitCode(warehouse.businessUnitCode);
-
-    if (existingWarehouse == null) {
-      throw new ResourceNotFoundException(
-          "No active warehouse found with business unit code " + warehouse.businessUnitCode + ".");
-    }
+    Warehouse existingWarehouse = archiveValidator.validate(warehouse);
 
     existingWarehouse.archivedAt = LocalDateTime.now();
 

@@ -74,6 +74,7 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
     return dbWarehouse == null ? null : dbWarehouse.toWarehouse();
   }
 
+  @Override
   public Warehouse findActiveById(Long id) {
     var dbWarehouse = this.findById(id);
     return dbWarehouse == null || dbWarehouse.archivedAt != null ? null : dbWarehouse.toWarehouse();

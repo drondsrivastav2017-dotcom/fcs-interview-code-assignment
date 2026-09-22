@@ -13,6 +13,7 @@ import com.fulfilment.application.monolith.exceptions.ResourceNotFoundException;
 import com.fulfilment.application.monolith.exceptions.ValidationException;
 import com.fulfilment.application.monolith.warehouses.domain.models.Warehouse;
 import com.fulfilment.application.monolith.warehouses.domain.ports.WarehouseStore;
+import com.fulfilment.application.monolith.warehouses.domain.validation.WarehouseArchiveValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,7 +26,8 @@ public class ArchiveWarehouseUseCaseTest {
   @BeforeEach
   void setUp() {
     warehouseStore = mock(WarehouseStore.class);
-    archiveWarehouseUseCase = new ArchiveWarehouseUseCase(warehouseStore);
+    archiveWarehouseUseCase =
+        new ArchiveWarehouseUseCase(warehouseStore, new WarehouseArchiveValidator(warehouseStore));
   }
 
   @Test
